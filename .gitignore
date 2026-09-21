@@ -1,0 +1,23 @@
+@"
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.env
+.env.*
+!.env.example
+
+.vscode/
+.idea/
+
+.DS_Store
+Thumbs.db
+
+*.log
+.pytest_cache/
+.ipynb_checkpoints/
+
+data/business_mode/uploads/
+"@ | Set-Content .gitignore

@@ -1,0 +1,4 @@
+product_id,product_name,category,service_level,calibration_level,residual_observations,safety_stock
+SKU101,Basmati Rice,Grocery,0.95,PRODUCT,8,27
+SKU102,Cooking Oil,Grocery,0.95,PRODUCT,8,8
+SKU103,Laundry Soap,Household,0.95,PRODUCT,8,17

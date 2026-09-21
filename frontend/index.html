@@ -1,0 +1,4221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Demand & Inventory Dashboard</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <style>
+        body {
+            background: #f5f7fb;
+            font-family: Arial, sans-serif;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #111827;
+            color: white;
+        }
+
+        .sidebar h4 {
+            font-weight: 700;
+        }
+
+        .sidebar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            display: block;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        .sidebar a:hover {
+            background: #1f2937;
+            color: white;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .card-box {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .small-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .critical {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .low {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .healthy {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        canvas {
+            max-height: 350px;
+        }
+
+        .table-container {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .recommendation-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .business-mode-header {
+            background: linear-gradient(135deg, #eff6ff, #f8fafc);
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .business-summary-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            height: 100%;
+        }
+
+        .business-table th {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-md-2 sidebar p-4">
+
+            <h4 class="mb-4">
+                <i class="bi bi-graph-up-arrow"></i>
+                Retail AI
+            </h4>
+
+            <a href="#dashboard">
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard
+            </a>
+
+            <a href="#forecasts">
+                <i class="bi bi-graph-up me-2"></i>
+                Forecasts
+            </a>
+
+            <a href="#inventory">
+                <i class="bi bi-box-seam me-2"></i>
+                Inventory
+            </a>
+
+            <a href="#recommendations">
+                <i class="bi bi-cart-check me-2"></i>
+                Recommendations
+            </a>
+
+            <a href="#business-mode">
+                <i class="bi bi-building-gear me-2"></i>
+                Real Business Mode
+            </a>
+
+            <a href="#research-validation">
+                <i class="bi bi-bar-chart-line me-2"></i>
+                Research Validation
+            </a>
+
+        </div>
+
+        <div class="col-md-10 main-content">
+
+            <div
+                id="dashboard"
+                class="d-flex justify-content-between align-items-center mb-4"
+            >
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        Retail Demand Dashboard
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        AI-powered demand forecasting and inventory optimization
+                    </p>
+                </div>
+
+                <span class="badge bg-success p-2">
+                    API Connected
+                </span>
+            </div>
+
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-3">
+                    <div class="card card-box p-3">
+                        <div class="small-label">
+                            Total Forecasts
+                        </div>
+                        <div class="stat-number" id="totalForecasts">-</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-box p-3">
+                        <div class="small-label">
+                            Critical Items
+                        </div>
+                        <div class="stat-number text-danger" id="criticalItems">-</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-box p-3">
+                        <div class="small-label">
+                            Low Stock
+                        </div>
+                        <div class="stat-number text-warning" id="lowStockItems">-</div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card card-box p-3">
+                        <div class="small-label">
+                            Recommended Order Units
+                        </div>
+                        <div class="stat-number text-primary" id="recommendedQty">-</div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- ====================================================== -->
+            <!-- ACTIVE MODEL PERFORMANCE -->
+            <!-- ====================================================== -->
+
+            <div class="card card-box p-4 mb-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Active Forecasting Model
+                        </h5>
+
+                        <span
+                            id="modelStatus"
+                            class="badge bg-success"
+                        >
+                            ACTIVE
+                        </span>
+                    </div>
+
+                    <div class="text-end">
+
+                        <div id="modelName" class="fw-bold">-</div>
+                        <div id="modelVersion" class="text-muted">-</div>
+
+                    </div>
+
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <div class="recommendation-box">
+                            <div class="small-label">Dataset</div>
+                            <div id="modelDataset" class="metric-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="recommendation-box">
+                            <div class="small-label">Validation WAPE</div>
+                            <div id="modelValidationWape" class="metric-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="recommendation-box">
+                            <div class="small-label">Final Test WAPE</div>
+                            <div id="modelTestWape" class="metric-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="recommendation-box">
+                            <div class="small-label">Forecast Horizon</div>
+                            <div class="metric-value">7 Days</div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ====================================================== -->
+            <!-- CROSS-DATASET RESEARCH VALIDATION -->
+            <!-- ====================================================== -->
+
+            <div
+                id="research-validation"
+                class="card card-box p-4 mb-4"
+            >
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Cross-Dataset Research Validation
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Final model performance compared with the 7-day seasonal naive baseline.
+                        </p>
+                    </div>
+
+                    <span class="badge bg-primary p-2">
+                        2 Retail Datasets
+                    </span>
+
+                </div>
+
+                <div class="row g-4 align-items-stretch">
+
+                    <div class="col-lg-7">
+
+                        <div class="recommendation-box h-100">
+
+                            <div class="small-label mb-2">
+                                Final Test WAPE vs Baseline WAPE
+                            </div>
+
+                            <canvas id="modelComparisonChart"></canvas>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-5">
+
+                        <div class="recommendation-box h-100">
+
+                            <div class="small-label mb-2">
+                                Research Results
+                            </div>
+
+                            <div class="table-responsive">
+
+                                <table class="table table-sm align-middle mb-3">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Dataset</th>
+                                            <th>Validation</th>
+                                            <th>Test</th>
+                                            <th>Baseline</th>
+                                            <th>Improvement</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="modelComparisonTable">
+                                        <tr>
+                                            <td colspan="5">
+                                                Loading...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div
+                                id="researchConclusion"
+                                class="alert alert-success mb-0"
+                            >
+                                Loading research conclusion...
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card card-box p-4 mb-4">
+                <h5 class="fw-bold mb-3">
+                    Top Product Families — 7-Day Forecast
+                </h5>
+                <canvas id="forecastChart"></canvas>
+            </div>
+
+
+            <!-- ====================================================== -->
+            <!-- REAL BUSINESS MODE -->
+            <!-- ====================================================== -->
+
+            <div id="business-mode" class="card card-box p-4 mb-4">
+
+                <div class="business-mode-header mb-4">
+
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+
+                        <div>
+                            <h5 class="fw-bold mb-1">
+                                <i class="bi bi-building-gear me-2"></i>
+                                Real Business Mode
+                            </h5>
+
+                            <p class="text-muted mb-0">
+                                Generate fresh business-specific 7-day forecasts,
+                                combine them with calibrated safety stock and current
+                                inventory, and produce reorder recommendations.
+                            </p>
+                        </div>
+
+                        <span class="badge bg-primary p-2">
+                            Business-Specific ML
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <!-- ================================================== -->
+                <!-- REAL BUSINESS DATA + MODEL SETUP -->
+                <!-- ================================================== -->
+
+                <div class="recommendation-box mb-4">
+
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+
+                        <div>
+                            <h6 class="fw-bold mb-1">
+                                <i class="bi bi-cloud-arrow-up me-2"></i>
+                                Business Data & Model Setup
+                            </h6>
+
+                            <p class="text-muted mb-0">
+                                Complete the workflow in order:
+                                upload sales, upload inventory, train the model,
+                                calibrate safety stock, then generate recommendations.
+                            </p>
+                        </div>
+
+                        <span class="badge bg-dark p-2">
+                            Real Data Workflow
+                        </span>
+
+                    </div>
+
+                    <div class="alert alert-light border mb-3">
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                            <div>
+                                <strong>
+                                    Pipeline Status:
+                                </strong>
+
+                                <span
+                                    id="businessPipelineStatus"
+                                    class="badge bg-secondary ms-1"
+                                >
+                                    Checking...
+                                </span>
+                            </div>
+
+                            <div class="small-label">
+                                Next Action:
+                                <strong id="businessNextAction">
+                                    Checking...
+                                </strong>
+                            </div>
+
+                            <div class="small-label">
+                                Production Rows:
+                                <strong id="businessProductionRows">
+                                    -
+                                </strong>
+                            </div>
+
+                            <div class="small-label">
+                                Validation WAPE:
+                                <strong id="businessValidationWape">
+                                    -
+                                </strong>
+                            </div>
+
+                            <div class="small-label">
+                                Recursive Daily WAPE:
+                                <strong id="businessRecursiveDailyWape">
+                                    -
+                                </strong>
+                            </div>
+
+                            <div class="small-label">
+                                7-Day Block WAPE:
+                                <strong id="businessRecursiveBlockWape">
+                                    -
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-lg-6">
+
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        1. Sales History CSV
+                                    </strong>
+
+                                    <span
+                                        id="businessSalesStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Waiting
+                                    </span>
+                                </div>
+
+                                <input
+                                    type="file"
+                                    id="businessSalesFile"
+                                    class="form-control mb-2"
+                                    accept=".csv"
+                                >
+
+                                <button
+                                    id="businessUploadSalesBtn"
+                                    class="btn btn-outline-primary w-100"
+                                    onclick="uploadBusinessSales()"
+                                >
+                                    <i class="bi bi-upload me-1"></i>
+                                    Upload & Activate Sales
+                                </button>
+
+                                <div class="small-label mt-2">
+                                    Required:
+                                    date, store_id, product_id, product_name,
+                                    category, units_sold, promotion
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-6">
+
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        2. Inventory CSV
+                                    </strong>
+
+                                    <span
+                                        id="businessInventoryStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Waiting
+                                    </span>
+                                </div>
+
+                                <input
+                                    type="file"
+                                    id="businessInventoryFile"
+                                    class="form-control mb-2"
+                                    accept=".csv"
+                                >
+
+                                <button
+                                    id="businessUploadInventoryBtn"
+                                    class="btn btn-outline-primary w-100"
+                                    onclick="uploadBusinessInventory()"
+                                >
+                                    <i class="bi bi-upload me-1"></i>
+                                    Upload & Activate Inventory
+                                </button>
+
+                                <div class="small-label mt-2">
+                                    Required:
+                                    store_id, product_id, product_name,
+                                    current_stock, on_order, backorders
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-6">
+
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        Optional. Future Promotion Plan
+                                    </strong>
+
+                                    <span
+                                        id="businessPromotionStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Not Active
+                                    </span>
+                                </div>
+
+                                <input
+                                    type="file"
+                                    id="businessPromotionFile"
+                                    class="form-control mb-2"
+                                    accept=".csv"
+                                >
+
+                                <button
+                                    id="businessUploadPromotionBtn"
+                                    class="btn btn-outline-primary w-100"
+                                    onclick="uploadBusinessPromotions()"
+                                >
+                                    <i class="bi bi-megaphone me-1"></i>
+                                    Upload Promotion Plan
+                                </button>
+
+                                <div class="small-label mt-2">
+                                    Optional columns:
+                                    date, store_id, product_id, promotion.
+                                    If no plan exists, promotion defaults to 0.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-6">
+
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        3. Train Business Model
+                                    </strong>
+
+                                    <span
+                                        id="businessModelTrainingStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Waiting
+                                    </span>
+                                </div>
+
+                                <p class="text-muted small mb-3">
+                                    Trains a business-specific LightGBM model
+                                    using the active uploaded sales history.
+                                </p>
+
+                                <button
+                                    id="businessTrainModelBtn"
+                                    class="btn btn-primary w-100"
+                                    onclick="trainBusinessModel()"
+                                >
+                                    <i class="bi bi-cpu me-1"></i>
+                                    Train Model
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-lg-6">
+
+                            <div class="border rounded-3 p-3 h-100 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        4. Calibrate Safety Stock
+                                    </strong>
+
+                                    <span
+                                        id="businessSafetyStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Waiting
+                                    </span>
+                                </div>
+
+                                <p class="text-muted small mb-3">
+                                    Calibrates the 95% empirical safety-stock
+                                    buffer from recursive historical backtests.
+                                </p>
+
+                                <button
+                                    id="businessCalibrateSafetyBtn"
+                                    class="btn btn-primary w-100"
+                                    onclick="calibrateBusinessSafetyStock()"
+                                >
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Calibrate Safety Stock
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="border rounded-3 p-3 bg-white">
+
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>
+                                        5. Run Complete Business Pipeline
+                                    </strong>
+
+                                    <span
+                                        id="businessCompletePipelineStatus"
+                                        class="badge bg-secondary"
+                                    >
+                                        Ready
+                                    </span>
+                                </div>
+
+                                <p class="text-muted small mb-3">
+                                    One click runs model training, safety-stock calibration,
+                                    7-day forecasting, and fresh inventory recommendations.
+                                </p>
+
+                                <button
+                                    id="businessRunPipelineBtn"
+                                    class="btn btn-success w-100"
+                                    onclick="runCompleteBusinessPipeline()"
+                                >
+                                    <i class="bi bi-play-circle me-1"></i>
+                                    Run Complete Pipeline
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="businessSetupMessage"
+                        class="mt-3"
+                    ></div>
+
+                </div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-3">
+                        <div class="business-summary-card">
+                            <div class="small-label">
+                                Matching Recommendations
+                            </div>
+                            <div
+                                id="businessRecommendationCount"
+                                class="stat-number"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="business-summary-card">
+                            <div class="small-label">
+                                7-Day Forecast Demand
+                            </div>
+                            <div
+                                id="businessForecastDemand"
+                                class="stat-number"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="business-summary-card">
+                            <div class="small-label">
+                                Inventory Position
+                            </div>
+                            <div
+                                id="businessInventoryPosition"
+                                class="stat-number"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="business-summary-card">
+                            <div class="small-label">
+                                Recommended Order Units
+                            </div>
+                            <div
+                                id="businessRecommendedOrder"
+                                class="stat-number text-primary"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row g-3 align-items-end mb-3">
+
+                    <div class="col-lg-3 col-md-4">
+
+                        <label class="form-label">
+                            Store
+                        </label>
+
+                        <select
+                            id="businessStoreFilter"
+                            class="form-select"
+                            onchange="loadBusinessRecommendations()"
+                        >
+                            <option value="">
+                                All Stores
+                            </option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-3 col-md-4">
+
+                        <label class="form-label">
+                            Status
+                        </label>
+
+                        <select
+                            id="businessStatusFilter"
+                            class="form-select"
+                            onchange="loadBusinessRecommendations()"
+                        >
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="CRITICAL">
+                                CRITICAL
+                            </option>
+
+                            <option value="LOW_STOCK">
+                                LOW STOCK
+                            </option>
+
+                            <option value="HEALTHY">
+                                HEALTHY
+                            </option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-2 col-md-4">
+
+                        <button
+                            id="generateBusinessBtn"
+                            class="btn btn-primary w-100"
+                            onclick="generateBusinessRecommendations()"
+                        >
+                            <i class="bi bi-lightning-charge-fill me-1"></i>
+                            Generate Fresh Recommendations
+                        </button>
+
+                    </div>
+
+                    <div class="col-lg-2 col-md-4">
+
+                        <button
+                            id="businessExportBtn"
+                            class="btn btn-outline-success w-100"
+                            onclick="exportBusinessRecommendations()"
+                        >
+                            <i class="bi bi-download me-1"></i>
+                            Export CSV
+                        </button>
+
+                    </div>
+
+                    <div class="col-lg-2 col-md-4">
+
+                        <button
+                            class="btn btn-outline-secondary w-100"
+                            onclick="resetBusinessFilters()"
+                        >
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            Reset Filters
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="businessOperationMessage"
+                    class="mb-3"
+                ></div>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-4">
+                        <div class="recommendation-box">
+                            <div class="small-label">
+                                Critical
+                            </div>
+                            <div
+                                id="businessCriticalCount"
+                                class="metric-value text-danger"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="recommendation-box">
+                            <div class="small-label">
+                                Low Stock
+                            </div>
+                            <div
+                                id="businessLowStockCount"
+                                class="metric-value text-warning"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="recommendation-box">
+                            <div class="small-label">
+                                Healthy
+                            </div>
+                            <div
+                                id="businessHealthyCount"
+                                class="metric-value text-success"
+                            >
+                                -
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle business-table">
+
+                        <thead>
+                            <tr>
+                                <th>Store</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>7-Day Forecast</th>
+                                <th>Inventory Position</th>
+                                <th>Safety Stock</th>
+                                <th>Reorder Point</th>
+                                <th>Recommended Order</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="businessRecommendationTable">
+                            <tr>
+                                <td colspan="9">
+                                    Loading real business recommendations...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <div id="inventory" class="card card-box p-4 mb-4">
+
+                <h5 class="fw-bold mb-3">
+                    Inventory Decision Center
+                </h5>
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label">Store</label>
+                        <select id="storeSelect" class="form-select">
+                            <option value="">Select store</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Product Family</label>
+                        <select id="familySelect" class="form-select">
+                            <option value="">Select family</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Current Stock</label>
+                        <input id="currentStock" type="number" min="0" class="form-control" placeholder="0">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">On Order</label>
+                        <input id="onOrder" type="number" min="0" value="0" class="form-control">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Backorders</label>
+                        <input id="backorders" type="number" min="0" value="0" class="form-control">
+                    </div>
+
+                </div>
+
+                <div class="mt-3 d-flex gap-2 flex-wrap">
+
+                    <button
+                        class="btn btn-primary"
+                        onclick="saveInventoryAndGenerate()"
+                    >
+                        <i class="bi bi-lightning-charge"></i>
+                        Save Inventory & Generate
+                    </button>
+
+                    <button
+                        id="saveRecommendationBtn"
+                        class="btn btn-success"
+                        onclick="saveCurrentRecommendation()"
+                        disabled
+                    >
+                        <i class="bi bi-database-check"></i>
+                        Save Recommendation
+                    </button>
+
+                    <button
+                        class="btn btn-outline-secondary"
+                        onclick="clearDecisionForm()"
+                    >
+                        Clear
+                    </button>
+
+                </div>
+
+                <div id="decisionMessage" class="mt-3"></div>
+
+                <div id="recommendationResult" class="recommendation-box mt-4 hidden">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-2">
+                            <div class="small-label">Forecast Demand</div>
+                            <div class="metric-value" id="resultForecast">-</div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="small-label">Safety Stock</div>
+                            <div class="metric-value" id="resultSafety">-</div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="small-label">Reorder Point</div>
+                            <div class="metric-value" id="resultReorder">-</div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="small-label">Inventory Position</div>
+                            <div class="metric-value" id="resultInventory">-</div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="small-label">Order Quantity</div>
+                            <div class="metric-value text-primary" id="resultOrder">-</div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="small-label">Status</div>
+                            <div class="mt-2">
+                                <span id="resultStatus" class="status-badge">-</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ====================================================== -->
+            <!-- BULK INVENTORY OPERATIONS -->
+            <!-- ====================================================== -->
+
+            <div class="card card-box p-4 mb-4">
+
+                <h5 class="fw-bold mb-3">
+                    Bulk Inventory Operations
+                </h5>
+
+                <p class="text-muted">
+                    Upload current inventory CSV for multiple
+                    Store + Product Family combinations.
+                </p>
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-md-6">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+
+                            <label class="form-label mb-0">
+                                Inventory CSV
+                            </label>
+
+                            <a
+                                href="/api/inventory/template"
+                                class="btn btn-sm btn-outline-secondary"
+                            >
+                                <i class="bi bi-file-earmark-arrow-down"></i>
+                                Download Inventory Template
+                            </a>
+
+                        </div>
+
+                        <input
+                            type="file"
+                            id="bulkInventoryFile"
+                            class="form-control"
+                            accept=".csv"
+                        >
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <button
+                            class="btn btn-primary w-100"
+                            onclick="uploadBulkInventory()"
+                        >
+                            <i class="bi bi-upload"></i>
+                            Upload Inventory
+                        </button>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <button
+                            class="btn btn-success w-100"
+                            onclick="generateAllRecommendations()"
+                        >
+                            <i class="bi bi-lightning"></i>
+                            Generate All Recommendations
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="bulkOperationMessage"
+                    class="mt-3"
+                ></div>
+
+            </div>
+
+            <div id="forecasts" class="card card-box p-4 mb-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+                    <h5 class="fw-bold mb-0">
+                        Latest Forecasts
+                    </h5>
+
+                    <div class="d-flex gap-2 flex-wrap">
+
+                        <select id="forecastStoreFilter" class="form-select form-select-sm">
+                            <option value="">All Stores</option>
+                        </select>
+
+                        <select id="forecastFamilyFilter" class="form-select form-select-sm">
+                            <option value="">All Families</option>
+                        </select>
+
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            onclick="loadForecastTable()"
+                        >
+                            Apply
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-outline-secondary"
+                            onclick="resetForecastFilters()"
+                        >
+                            Reset
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Store</th>
+                                <th>Family</th>
+                                <th>7-Day Forecast</th>
+                                <th>Safety Stock</th>
+                                <th>Reorder Point</th>
+                                <th>Model</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="forecastTable">
+                            <tr>
+                                <td colspan="6">Loading...</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div id="recommendations" class="card card-box p-4">
+
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+                    <h5 class="fw-bold mb-0">
+                        Inventory Recommendations
+                    </h5>
+
+                    <div class="d-flex gap-2 flex-wrap">
+
+                        <select
+                            id="recommendationStoreFilter"
+                            class="form-select form-select-sm"
+                            onchange="loadRecommendations()"
+                        >
+                            <option value="">
+                                All Stores
+                            </option>
+                        </select>
+
+                        <select
+                            id="recommendationStatusFilter"
+                            class="form-select form-select-sm"
+                            onchange="loadRecommendations()"
+                        >
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="CRITICAL">
+                                CRITICAL
+                            </option>
+
+                            <option value="LOW STOCK">
+                                LOW STOCK
+                            </option>
+
+                            <option value="HEALTHY">
+                                HEALTHY
+                            </option>
+                        </select>
+
+                        <button
+                            class="btn btn-sm btn-success"
+                            onclick="downloadRecommendationsCSV()"
+                        >
+                            <i class="bi bi-download"></i>
+                            Download CSV
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            onclick="loadDashboard()"
+                        >
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Refresh
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+
+                        <thead>
+                            <tr>
+                                <th>Store</th>
+                                <th>Family</th>
+                                <th>Status</th>
+                                <th>Inventory Position</th>
+                                <th>Recommended Order</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recommendationTable">
+                            <tr>
+                                <td colspan="5">No recommendations yet.</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const API_BASE = window.location.origin;
+
+let forecastChart;
+let modelComparisonChart;
+let currentRecommendation = null;
+
+
+async function apiFetch(url, options = {}) {
+
+    const response = await fetch(url, options);
+
+    let data = {};
+
+    try {
+        data = await response.json();
+    }
+    catch {
+        data = {};
+    }
+
+    if (!response.ok) {
+
+        let detail =
+            data.detail
+            || `Request failed (${response.status})`;
+
+        if (typeof detail !== "string") {
+            detail = JSON.stringify(
+                detail,
+                null,
+                2
+            );
+        }
+
+        throw new Error(
+            detail
+        );
+    }
+
+    return data;
+}
+
+
+async function loadMasterData() {
+
+    const [storesData, familiesData] = await Promise.all([
+        apiFetch(`${API_BASE}/api/stores`),
+        apiFetch(`${API_BASE}/api/families`)
+    ]);
+
+    populateStoreOptions(storesData.stores);
+    populateFamilyOptions(familiesData.families);
+}
+
+
+function populateStoreOptions(stores) {
+
+    const selectors = [
+        document.getElementById("storeSelect"),
+        document.getElementById("forecastStoreFilter"),
+        document.getElementById("recommendationStoreFilter")
+    ];
+
+    stores.forEach(store => {
+
+        selectors.forEach(select => {
+
+            const option = document.createElement("option");
+
+            option.value = store.store_nbr;
+            option.textContent = `${store.store_nbr} - ${store.city}`;
+
+            select.appendChild(option);
+        });
+    });
+}
+
+
+function populateFamilyOptions(families) {
+
+    const selectors = [
+        document.getElementById("familySelect"),
+        document.getElementById("forecastFamilyFilter")
+    ];
+
+    families.forEach(family => {
+
+        selectors.forEach(select => {
+
+            const option = document.createElement("option");
+
+            option.value = family.family_name;
+            option.textContent = family.family_name;
+
+            select.appendChild(option);
+        });
+    });
+}
+
+
+async function loadStats() {
+
+    const data = await apiFetch(
+        `${API_BASE}/api/dashboard/stats`
+    );
+
+    document.getElementById("totalForecasts").textContent =
+        data.total_forecasts.toLocaleString();
+
+    document.getElementById("criticalItems").textContent =
+        data.critical_items.toLocaleString();
+
+    document.getElementById("lowStockItems").textContent =
+        data.low_stock_items.toLocaleString();
+
+    document.getElementById("recommendedQty").textContent =
+        Number(
+            data.total_recommended_order_qty
+        ).toLocaleString();
+}
+
+
+async function loadForecastChart() {
+
+    const result = await apiFetch(
+        `${API_BASE}/api/dashboard/forecast-summary?group_by=family&limit=8`
+    );
+
+    const labels = result.data.map(item => item.label);
+    const forecasts = result.data.map(item => item.forecast_demand_7d);
+    const reorderPoints = result.data.map(item => item.reorder_point);
+
+    if (forecastChart) {
+        forecastChart.destroy();
+    }
+
+    const ctx = document.getElementById("forecastChart");
+
+    forecastChart = new Chart(ctx, {
+        type: "bar",
+
+        data: {
+            labels: labels,
+
+            datasets: [
+                {
+                    label: "7-Day Forecast",
+                    data: forecasts
+                },
+                {
+                    label: "Reorder Point",
+                    data: reorderPoints
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+
+async function loadForecastTable() {
+
+    const store =
+        document.getElementById("forecastStoreFilter").value;
+
+    const family =
+        document.getElementById("forecastFamilyFilter").value;
+
+    const params = new URLSearchParams();
+
+    params.set("limit", "100");
+
+    if (store) {
+        params.set("store_nbr", store);
+    }
+
+    if (family) {
+        params.set("family_name", family);
+    }
+
+    const result = await apiFetch(
+        `${API_BASE}/api/forecasts?${params.toString()}`
+    );
+
+    const tbody = document.getElementById("forecastTable");
+
+    tbody.innerHTML = "";
+
+    if (result.count === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    No forecasts found.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    result.forecasts.forEach(item => {
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${item.store_nbr}</td>
+            <td><strong>${item.family_name}</strong></td>
+            <td>${Number(item.forecast_demand_7d).toLocaleString()}</td>
+            <td>${Number(item.safety_stock).toLocaleString()}</td>
+            <td>${Number(item.reorder_point).toLocaleString()}</td>
+            <td>
+                <span class="badge bg-primary">
+                    ${item.model_version}
+                </span>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+
+function resetForecastFilters() {
+
+    document.getElementById("forecastStoreFilter").value = "";
+    document.getElementById("forecastFamilyFilter").value = "";
+
+    loadForecastTable();
+}
+
+
+async function saveInventoryAndGenerate() {
+
+    const store =
+        document.getElementById("storeSelect").value;
+
+    const family =
+        document.getElementById("familySelect").value;
+
+    const currentStock =
+        document.getElementById("currentStock").value;
+
+    const onOrder =
+        document.getElementById("onOrder").value || 0;
+
+    const backorders =
+        document.getElementById("backorders").value || 0;
+
+    const message =
+        document.getElementById("decisionMessage");
+
+    message.innerHTML = "";
+
+    if (!store || !family || currentStock === "") {
+
+        message.innerHTML = `
+            <div class="alert alert-warning">
+                Please select store, family and enter current stock.
+            </div>
+        `;
+
+        return;
+    }
+
+    try {
+
+        await apiFetch(
+            `${API_BASE}/api/inventory`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    store_nbr: Number(store),
+                    family_name: family,
+                    current_stock: Number(currentStock),
+                    on_order: Number(onOrder),
+                    backorders: Number(backorders)
+                })
+            }
+        );
+
+        const params = new URLSearchParams({
+            store_nbr: store,
+            family_name: family
+        });
+
+        const recommendation = await apiFetch(
+            `${API_BASE}/api/recommendation?${params.toString()}`
+        );
+
+        currentRecommendation = {
+            store_nbr: Number(store),
+            family_name: family,
+            data: recommendation
+        };
+
+        displayRecommendation(recommendation);
+
+        document.getElementById(
+            "saveRecommendationBtn"
+        ).disabled = false;
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                Inventory saved and recommendation generated.
+            </div>
+        `;
+
+    }
+    catch (error) {
+
+        currentRecommendation = null;
+
+        document.getElementById(
+            "saveRecommendationBtn"
+        ).disabled = true;
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+
+function displayRecommendation(data) {
+
+    document.getElementById("resultForecast").textContent =
+        Number(data.forecast_demand_7d).toLocaleString();
+
+    document.getElementById("resultSafety").textContent =
+        Number(data.safety_stock).toLocaleString();
+
+    document.getElementById("resultReorder").textContent =
+        Number(data.reorder_point).toLocaleString();
+
+    document.getElementById("resultInventory").textContent =
+        Number(data.inventory.inventory_position).toLocaleString();
+
+    document.getElementById("resultOrder").textContent =
+        Number(
+            data.recommendation.recommended_order_qty
+        ).toLocaleString();
+
+    const status =
+        data.recommendation.stock_status;
+
+    const statusElement =
+        document.getElementById("resultStatus");
+
+    statusElement.textContent = status;
+    statusElement.className = "status-badge";
+
+    if (status === "CRITICAL") {
+        statusElement.classList.add("critical");
+    }
+    else if (status === "LOW STOCK") {
+        statusElement.classList.add("low");
+    }
+    else {
+        statusElement.classList.add("healthy");
+    }
+
+    document.getElementById(
+        "recommendationResult"
+    ).classList.remove("hidden");
+}
+
+
+async function saveCurrentRecommendation() {
+
+    if (!currentRecommendation) {
+        return;
+    }
+
+    const message =
+        document.getElementById("decisionMessage");
+
+    try {
+
+        const params = new URLSearchParams({
+            store_nbr: currentRecommendation.store_nbr,
+            family_name: currentRecommendation.family_name
+        });
+
+        const result = await apiFetch(
+            `${API_BASE}/api/recommendation/save?${params.toString()}`,
+            {
+                method: "POST"
+            }
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                Recommendation saved. ID: ${result.recommendation_id}
+            </div>
+        `;
+
+        await Promise.all([
+            loadStats(),
+            loadRecommendations()
+        ]);
+
+    }
+    catch (error) {
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+
+async function loadRecommendations() {
+
+    const store =
+        document.getElementById(
+            "recommendationStoreFilter"
+        )?.value || "";
+
+    const status =
+        document.getElementById(
+            "recommendationStatusFilter"
+        )?.value || "";
+
+    const params =
+        new URLSearchParams();
+
+    params.set(
+        "limit",
+        "100"
+    );
+
+    if (store) {
+        params.set(
+            "store_nbr",
+            store
+        );
+    }
+
+    if (status) {
+        params.set(
+            "stock_status",
+            status
+        );
+    }
+
+    const result = await apiFetch(
+        `${API_BASE}/api/recommendations?${params.toString()}`
+    );
+
+    const tbody =
+        document.getElementById(
+            "recommendationTable"
+        );
+
+    tbody.innerHTML = "";
+
+    if (result.count === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    No recommendations found.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    result.recommendations.forEach(
+        item => {
+
+            let statusClass =
+                "healthy";
+
+            if (
+                item.stock_status
+                === "CRITICAL"
+            ) {
+                statusClass =
+                    "critical";
+            }
+
+            else if (
+                item.stock_status
+                === "LOW STOCK"
+            ) {
+                statusClass =
+                    "low";
+            }
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+            row.innerHTML = `
+                <td>
+                    ${item.store_nbr}
+                </td>
+
+                <td>
+                    ${item.family_name}
+                </td>
+
+                <td>
+                    <span
+                        class="status-badge ${statusClass}"
+                    >
+                        ${item.stock_status}
+                    </span>
+                </td>
+
+                <td>
+                    ${Number(
+                        item.inventory_position
+                    ).toLocaleString()}
+                </td>
+
+                <td>
+                    <strong>
+                        ${Number(
+                            item.recommended_order_qty
+                        ).toLocaleString()}
+                    </strong>
+                </td>
+            `;
+
+            tbody.appendChild(
+                row
+            );
+        }
+    );
+}
+
+function clearDecisionForm() {
+
+    document.getElementById("storeSelect").value = "";
+    document.getElementById("familySelect").value = "";
+    document.getElementById("currentStock").value = "";
+    document.getElementById("onOrder").value = "0";
+    document.getElementById("backorders").value = "0";
+    document.getElementById("decisionMessage").innerHTML = "";
+
+    document.getElementById(
+        "recommendationResult"
+    ).classList.add("hidden");
+
+    document.getElementById(
+        "saveRecommendationBtn"
+    ).disabled = true;
+
+    currentRecommendation = null;
+}
+
+
+
+// ============================================================
+// BULK INVENTORY UPLOAD
+// ============================================================
+
+async function uploadBulkInventory() {
+
+    const input =
+        document.getElementById(
+            "bulkInventoryFile"
+        );
+
+    const message =
+        document.getElementById(
+            "bulkOperationMessage"
+        );
+
+    if (!input.files.length) {
+
+        message.innerHTML = `
+            <div class="alert alert-warning">
+                Please select a CSV file.
+            </div>
+        `;
+
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append(
+        "file",
+        input.files[0]
+    );
+
+    try {
+
+        const result = await apiFetch(
+            `${API_BASE}/api/inventory/bulk`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                Inventory uploaded successfully.
+                Rows inserted:
+                <strong>${result.rows_inserted}</strong>
+            </div>
+        `;
+
+    }
+    catch (error) {
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+
+// ============================================================
+// GENERATE ALL RECOMMENDATIONS
+// ============================================================
+
+async function generateAllRecommendations() {
+
+    const message =
+        document.getElementById(
+            "bulkOperationMessage"
+        );
+
+    try {
+
+        const result = await apiFetch(
+            `${API_BASE}/api/recommendations/generate-all`,
+            {
+                method: "POST"
+            }
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+
+                <strong>
+                    Bulk recommendations generated.
+                </strong>
+
+                <br>
+                Processed:
+                ${result.inventory_series_processed}
+
+                <br>
+                Inserted:
+                ${result.recommendations_inserted}
+
+                <br>
+                Duplicates Skipped:
+                ${result.duplicates_skipped}
+
+                <br>
+                Critical:
+                ${result.critical_items}
+
+                <br>
+                Low Stock:
+                ${result.low_stock_items}
+
+                <br>
+                Healthy:
+                ${result.healthy_items}
+
+                <br>
+                Recommended Order Units:
+                ${Number(
+                    result.total_recommended_order_qty
+                ).toLocaleString()}
+
+            </div>
+        `;
+
+        await Promise.all([
+            loadStats(),
+            loadRecommendations()
+        ]);
+
+    }
+    catch (error) {
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+
+
+// ============================================================
+// ACTIVE MODEL
+// ============================================================
+
+async function loadActiveModel() {
+
+    const model = await apiFetch(
+        `${API_BASE}/api/model/active`
+    );
+
+    document.getElementById("modelName").textContent =
+        model.model_name;
+
+    document.getElementById("modelVersion").textContent =
+        model.model_version;
+
+    document.getElementById("modelDataset").textContent =
+        model.dataset;
+
+    document.getElementById("modelValidationWape").textContent =
+        Number(model.validation_wape).toFixed(4) + "%";
+
+    document.getElementById("modelTestWape").textContent =
+        Number(model.test_wape).toFixed(4) + "%";
+
+    const statusElement =
+        document.getElementById("modelStatus");
+
+    statusElement.textContent =
+        model.is_active ? "ACTIVE" : "INACTIVE";
+
+    statusElement.className =
+        model.is_active
+        ? "badge bg-success"
+        : "badge bg-secondary";
+}
+
+
+
+// ============================================================
+// CROSS-DATASET MODEL COMPARISON
+// ============================================================
+
+async function loadModelComparison() {
+
+    const result = await apiFetch(
+        `${API_BASE}/api/model/comparison`
+    );
+
+    const labels = result.models.map(
+        model => model.dataset
+    );
+
+    const testWape = result.models.map(
+        model => model.test_wape
+    );
+
+    const baselineWape = result.models.map(
+        model => model.baseline_wape
+    );
+
+    if (modelComparisonChart) {
+        modelComparisonChart.destroy();
+    }
+
+    const ctx = document.getElementById(
+        "modelComparisonChart"
+    );
+
+    modelComparisonChart = new Chart(
+        ctx,
+        {
+            type: "bar",
+
+            data: {
+                labels: labels,
+
+                datasets: [
+                    {
+                        label: "Final Test WAPE %",
+                        data: testWape
+                    },
+                    {
+                        label: "Seasonal Naive Baseline WAPE %",
+                        data: baselineWape
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+
+                plugins: {
+                    legend: {
+                        position: "top"
+                    },
+
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return (
+                                    context.dataset.label
+                                    + ": "
+                                    + Number(context.raw).toFixed(4)
+                                    + "%"
+                                );
+                            }
+                        }
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+
+                        title: {
+                            display: true,
+                            text: "WAPE (%)"
+                        }
+                    }
+                }
+            }
+        }
+    );
+
+    const tbody = document.getElementById(
+        "modelComparisonTable"
+    );
+
+    tbody.innerHTML = "";
+
+    result.models.forEach(
+        model => {
+
+            const row = document.createElement(
+                "tr"
+            );
+
+            const activeBadge = model.is_active
+                ? `
+                    <span class="badge bg-success ms-1">
+                        Active
+                    </span>
+                `
+                : `
+                    <span class="badge bg-secondary ms-1">
+                        External
+                    </span>
+                `;
+
+            row.innerHTML = `
+                <td>
+                    <strong>
+                        ${model.dataset}
+                    </strong>
+                    ${activeBadge}
+                </td>
+
+                <td>
+                    ${Number(
+                        model.validation_wape
+                    ).toFixed(4)}%
+                </td>
+
+                <td>
+                    ${Number(
+                        model.test_wape
+                    ).toFixed(4)}%
+                </td>
+
+                <td>
+                    ${Number(
+                        model.baseline_wape
+                    ).toFixed(4)}%
+                </td>
+
+                <td>
+                    <span class="badge bg-success">
+                        ${Number(
+                            model.improvement_over_baseline
+                        ).toFixed(2)}%
+                    </span>
+                </td>
+            `;
+
+            tbody.appendChild(
+                row
+            );
+        }
+    );
+
+    document.getElementById(
+        "researchConclusion"
+    ).textContent =
+        result.research_conclusion;
+}
+
+
+
+// ============================================================
+// FILTERED RECOMMENDATIONS CSV DOWNLOAD
+// ============================================================
+
+function downloadRecommendationsCSV() {
+
+    const store =
+        document.getElementById(
+            "recommendationStoreFilter"
+        ).value;
+
+    const status =
+        document.getElementById(
+            "recommendationStatusFilter"
+        ).value;
+
+    const params =
+        new URLSearchParams();
+
+    if (store) {
+        params.set(
+            "store_nbr",
+            store
+        );
+    }
+
+    if (status) {
+        params.set(
+            "stock_status",
+            status
+        );
+    }
+
+    let url =
+        `${API_BASE}/api/recommendations/export`;
+
+    if (params.toString()) {
+        url += `?${params.toString()}`;
+    }
+
+    window.location.href = url;
+}
+
+
+
+// ============================================================
+// REAL BUSINESS MODE
+// ============================================================
+
+function setBusinessStageStatus(
+    elementId,
+    text,
+    type = "secondary"
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent =
+        text;
+
+    element.className =
+        `badge bg-${type}`;
+}
+
+
+function setBusinessButtonLoading(
+    button,
+    loading,
+    loadingText,
+    originalHtml
+) {
+
+    if (!button) {
+        return;
+    }
+
+    button.disabled =
+        loading;
+
+    if (loading) {
+
+        button.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+            ></span>
+            ${loadingText}
+        `;
+    }
+
+    else {
+
+        button.innerHTML =
+            originalHtml;
+    }
+}
+
+
+async function loadBusinessPipelineStatus() {
+
+    const overallStatus =
+        document.getElementById(
+            "businessPipelineStatus"
+        );
+
+    const nextAction =
+        document.getElementById(
+            "businessNextAction"
+        );
+
+    const productionRows =
+        document.getElementById(
+            "businessProductionRows"
+        );
+
+    const validationWape =
+        document.getElementById(
+            "businessValidationWape"
+        );
+
+    const recursiveDailyWape =
+        document.getElementById(
+            "businessRecursiveDailyWape"
+        );
+
+    const recursiveBlockWape =
+        document.getElementById(
+            "businessRecursiveBlockWape"
+        );
+
+    if (!overallStatus) {
+        return;
+    }
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/pipeline-status`
+            );
+
+        if (result.status === "COMPLETE") {
+
+            overallStatus.textContent =
+                "COMPLETE";
+
+            overallStatus.className =
+                "badge bg-success ms-1";
+        }
+
+        else if (result.status === "READY") {
+
+            overallStatus.textContent =
+                "READY";
+
+            overallStatus.className =
+                "badge bg-primary ms-1";
+        }
+
+        else {
+
+            overallStatus.textContent =
+                "ACTION REQUIRED";
+
+            overallStatus.className =
+                "badge bg-warning text-dark ms-1";
+        }
+
+        const actionLabels = {
+            UPLOAD_SALES:
+                "Upload Sales",
+            UPLOAD_INVENTORY:
+                "Upload Inventory",
+            TRAIN_MODEL:
+                "Train Model",
+            CALIBRATE_SAFETY_STOCK:
+                "Calibrate Safety Stock",
+            GENERATE_RECOMMENDATIONS:
+                "Generate Recommendations",
+            COMPLETE:
+                "Complete"
+        };
+
+        nextAction.textContent =
+            actionLabels[
+                result.next_action
+            ]
+            || result.next_action
+            || "-";
+
+        productionRows.textContent =
+            result.production_training_rows == null
+            ? "-"
+            : Number(
+                result.production_training_rows
+            ).toLocaleString();
+
+        validationWape.textContent =
+            result.validation_wape == null
+            ? "-"
+            : Number(
+                result.validation_wape
+            ).toFixed(4) + "%";
+
+        recursiveDailyWape.textContent =
+            result.recursive_daily_wape == null
+            ? "-"
+            : Number(
+                result.recursive_daily_wape
+            ).toFixed(4) + "%";
+
+        recursiveBlockWape.textContent =
+            result.recursive_7day_block_wape == null
+            ? "-"
+            : Number(
+                result.recursive_7day_block_wape
+            ).toFixed(4) + "%";
+
+        setBusinessStageStatus(
+            "businessSalesStatus",
+            result.sales_active
+                ? "Active"
+                : "Missing",
+            result.sales_active
+                ? "success"
+                : "secondary"
+        );
+
+        setBusinessStageStatus(
+            "businessInventoryStatus",
+            result.inventory_active
+                ? "Active"
+                : "Missing",
+            result.inventory_active
+                ? "success"
+                : "secondary"
+        );
+
+        setBusinessStageStatus(
+            "businessPromotionStatus",
+            result.promotion_plan_active
+                ? (
+                    "Active · "
+                    + Number(
+                        result.promotion_rows_enabled || 0
+                    ).toLocaleString()
+                    + " promo"
+                )
+                : "Not Active",
+            result.promotion_plan_active
+                ? "success"
+                : "secondary"
+        );
+
+        setBusinessStageStatus(
+            "businessModelTrainingStatus",
+            result.model_current
+                ? "Trained"
+                : (
+                    result.sales_active
+                    ? "Retrain Required"
+                    : "Waiting"
+                ),
+            result.model_current
+                ? "success"
+                : (
+                    result.sales_active
+                    ? "warning"
+                    : "secondary"
+                )
+        );
+
+        setBusinessStageStatus(
+            "businessSafetyStatus",
+            result.safety_stock_current
+                ? "Calibrated"
+                : (
+                    result.model_current
+                    ? "Recalibrate Required"
+                    : "Waiting"
+                ),
+            result.safety_stock_current
+                ? "success"
+                : (
+                    result.model_current
+                    ? "warning"
+                    : "secondary"
+                )
+        );
+
+        setBusinessStageStatus(
+            "businessCompletePipelineStatus",
+            result.recommendations_current
+                ? "Complete"
+                : (
+                    result.ready_for_recommendations
+                    ? "Ready"
+                    : "Waiting"
+                ),
+            result.recommendations_current
+                ? "success"
+                : (
+                    result.ready_for_recommendations
+                    ? "primary"
+                    : "secondary"
+                )
+        );
+
+    }
+
+    catch (error) {
+
+        overallStatus.textContent =
+            "STATUS ERROR";
+
+        overallStatus.className =
+            "badge bg-danger ms-1";
+
+        nextAction.textContent =
+            error.message;
+    }
+}
+
+
+async function uploadBusinessSales() {
+
+    const input =
+        document.getElementById(
+            "businessSalesFile"
+        );
+
+    const button =
+        document.getElementById(
+            "businessUploadSalesBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    if (
+        !input
+        || !input.files.length
+    ) {
+
+        message.innerHTML = `
+            <div class="alert alert-warning">
+                Please select a sales-history CSV file first.
+            </div>
+        `;
+
+        return;
+    }
+
+    const originalHtml =
+        button.innerHTML;
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        input.files[0]
+    );
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Uploading Sales...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessSalesStatus",
+        "Uploading",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Validating and activating sales history...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/upload-sales`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessSalesStatus",
+            "Active",
+            "success"
+        );
+
+        setBusinessStageStatus(
+            "businessModelTrainingStatus",
+            "Retrain Required",
+            "warning"
+        );
+
+        setBusinessStageStatus(
+            "businessSafetyStatus",
+            "Recalibrate Required",
+            "warning"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Sales history uploaded and activated.
+                </strong>
+                <br>
+                File:
+                ${result.filename}
+                <br>
+                Rows:
+                ${Number(
+                    result.validation?.profile?.rows
+                    || result.validation?.profile?.row_count
+                    || 0
+                ).toLocaleString()}
+                ${
+                    result.time_series_continuity
+                    ? `
+                        <br>
+                        Daily Continuity:
+                        <strong>
+                            ${result.time_series_continuity.valid
+                                ? "VALID"
+                                : "INVALID"}
+                        </strong>
+                        <br>
+                        Series Checked:
+                        ${Number(
+                            result.time_series_continuity.series_checked
+                            || 0
+                        ).toLocaleString()}
+                        &nbsp; | &nbsp;
+                        Missing Calendar Days:
+                        ${Number(
+                            result.time_series_continuity.missing_calendar_days
+                            || 0
+                        ).toLocaleString()}
+                        <br>
+                        Duplicate Daily Rows:
+                        ${Number(
+                            result.time_series_continuity.duplicate_date_store_product_rows
+                            || 0
+                        ).toLocaleString()}
+                    `
+                    : ""
+                }
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessSalesStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Sales upload failed.</strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function uploadBusinessInventory() {
+
+    const input =
+        document.getElementById(
+            "businessInventoryFile"
+        );
+
+    const button =
+        document.getElementById(
+            "businessUploadInventoryBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    if (
+        !input
+        || !input.files.length
+    ) {
+
+        message.innerHTML = `
+            <div class="alert alert-warning">
+                Please select an inventory CSV file first.
+            </div>
+        `;
+
+        return;
+    }
+
+    const originalHtml =
+        button.innerHTML;
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        input.files[0]
+    );
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Uploading Inventory...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessInventoryStatus",
+        "Uploading",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Validating and activating inventory...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/upload-inventory`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessInventoryStatus",
+            "Active",
+            "success"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Inventory uploaded and activated.
+                </strong>
+                <br>
+                File:
+                ${result.filename}
+                <br>
+                Rows:
+                ${Number(
+                    result.validation?.profile?.rows
+                    || result.validation?.profile?.row_count
+                    || 0
+                ).toLocaleString()}
+                ${
+                    result.sales_inventory_consistency
+                    ? `
+                        <br>
+                        Pair Consistency:
+                        <strong>
+                            ${result.sales_inventory_consistency.matched
+                                ? "MATCHED"
+                                : "NOT MATCHED"}
+                        </strong>
+                        <br>
+                        Sales Pairs:
+                        ${Number(
+                            result.sales_inventory_consistency.sales_pairs
+                            || 0
+                        ).toLocaleString()}
+                        &nbsp; | &nbsp;
+                        Inventory Pairs:
+                        ${Number(
+                            result.sales_inventory_consistency.inventory_pairs
+                            || 0
+                        ).toLocaleString()}
+                        <br>
+                        Missing Pairs:
+                        ${Number(
+                            result.sales_inventory_consistency.missing_inventory_pairs
+                            || 0
+                        ).toLocaleString()}
+                        &nbsp; | &nbsp;
+                        Unknown Pairs:
+                        ${Number(
+                            result.sales_inventory_consistency.unknown_inventory_pairs
+                            || 0
+                        ).toLocaleString()}
+                    `
+                    : ""
+                }
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessInventoryStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Inventory upload failed.</strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function runCompleteBusinessPipeline() {
+
+    const button =
+        document.getElementById(
+            "businessRunPipelineBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    const originalHtml =
+        button.innerHTML;
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Running Complete Pipeline...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessCompletePipelineStatus",
+        "Running",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            <strong>
+                Complete business pipeline is running...
+            </strong>
+            <br>
+            Training model → calibrating safety stock →
+            generating forecast → generating recommendations.
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/run-pipeline`,
+                {
+                    method: "POST"
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessCompletePipelineStatus",
+            "Complete",
+            "success"
+        );
+
+        const training =
+            result.stages?.train_model || {};
+
+        const safety =
+            result.stages?.calibrate_safety_stock || {};
+
+        const recommendations =
+            result.stages?.generate_recommendations || {};
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Complete business pipeline finished successfully.
+                </strong>
+                <br>
+                Validation WAPE:
+                ${
+                    training.validation_wape == null
+                    ? "N/A"
+                    : Number(
+                        training.validation_wape
+                    ).toFixed(4) + "%"
+                }
+                <br>
+                Recursive Daily WAPE:
+                ${
+                    safety.recursive_daily_wape == null
+                    ? "N/A"
+                    : Number(
+                        safety.recursive_daily_wape
+                    ).toFixed(4) + "%"
+                }
+                <br>
+                7-Day Forecast Demand:
+                ${Number(
+                    recommendations.total_forecast_demand || 0
+                ).toLocaleString(
+                    undefined,
+                    {
+                        maximumFractionDigits: 2
+                    }
+                )}
+                <br>
+                Recommended Order Units:
+                ${Number(
+                    recommendations.total_recommended_order || 0
+                ).toLocaleString()}
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessStoreOptions();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessCompletePipelineStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>
+                    Complete pipeline failed.
+                </strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function uploadBusinessPromotions() {
+
+    const input =
+        document.getElementById(
+            "businessPromotionFile"
+        );
+
+    const button =
+        document.getElementById(
+            "businessUploadPromotionBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    if (
+        !input
+        || !input.files.length
+    ) {
+
+        message.innerHTML = `
+            <div class="alert alert-warning">
+                Please select a future-promotion CSV file first.
+            </div>
+        `;
+
+        return;
+    }
+
+    const originalHtml =
+        button.innerHTML;
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        input.files[0]
+    );
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Uploading Promotions...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessPromotionStatus",
+        "Uploading",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Validating and activating future promotion plan...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/upload-promotions`,
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessPromotionStatus",
+            "Active",
+            "success"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Future promotion plan uploaded successfully.
+                </strong>
+                <br>
+                Rows:
+                ${Number(
+                    result.rows
+                ).toLocaleString()}
+                <br>
+                Active Promotion Rows:
+                ${Number(
+                    result.promotion_rows
+                ).toLocaleString()}
+                <br>
+                Forecast Window:
+                ${result.forecast_start}
+                to
+                ${result.forecast_end}
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessPromotionStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Promotion upload failed.</strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function trainBusinessModel() {
+
+    const button =
+        document.getElementById(
+            "businessTrainModelBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    const originalHtml =
+        button.innerHTML;
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Training Model...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessModelTrainingStatus",
+        "Training",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Training the business-specific forecasting model...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/train-model`,
+                {
+                    method: "POST"
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessModelTrainingStatus",
+            "Trained",
+            "success"
+        );
+
+        setBusinessStageStatus(
+            "businessSafetyStatus",
+            "Recalibrate Required",
+            "warning"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Business model trained successfully.
+                </strong>
+                <br>
+                Training Rows:
+                ${Number(
+                    result.training_rows
+                ).toLocaleString()}
+                <br>
+                Validation Rows:
+                ${Number(
+                    result.validation_rows
+                ).toLocaleString()}
+                <br>
+                MAE:
+                ${Number(
+                    result.mae
+                ).toFixed(4)}
+                &nbsp; | &nbsp;
+                RMSE:
+                ${Number(
+                    result.rmse
+                ).toFixed(4)}
+                &nbsp; | &nbsp;
+                WAPE:
+                ${result.wape === null
+                    ? "N/A"
+                    : Number(
+                        result.wape
+                    ).toFixed(4) + "%"
+                }
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessModelTrainingStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Model training failed.</strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function calibrateBusinessSafetyStock() {
+
+    const button =
+        document.getElementById(
+            "businessCalibrateSafetyBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessSetupMessage"
+        );
+
+    const originalHtml =
+        button.innerHTML;
+
+    setBusinessButtonLoading(
+        button,
+        true,
+        "Calibrating...",
+        originalHtml
+    );
+
+    setBusinessStageStatus(
+        "businessSafetyStatus",
+        "Calibrating",
+        "warning"
+    );
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Running recursive backtests and calibrating safety stock...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/calibrate-safety-stock`,
+                {
+                    method: "POST"
+                }
+            );
+
+        setBusinessStageStatus(
+            "businessSafetyStatus",
+            "Calibrated",
+            "success"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Safety stock calibrated successfully.
+                </strong>
+                <br>
+                Service Level:
+                ${Number(
+                    result.service_level
+                ) * 100}%
+                <br>
+                7-Day Backtest Blocks:
+                ${result.weekly_blocks}
+                <br>
+                Global Buffer:
+                ${Number(
+                    result.global_buffer
+                ).toLocaleString(
+                    undefined,
+                    {
+                        maximumFractionDigits: 2
+                    }
+                )}
+                <br>
+                Recursive Daily WAPE:
+                ${result.recursive_daily_wape == null
+                    ? "N/A"
+                    : Number(
+                        result.recursive_daily_wape
+                    ).toFixed(4) + "%"
+                }
+                <br>
+                7-Day Block WAPE:
+                ${result.recursive_7day_block_wape == null
+                    ? "N/A"
+                    : Number(
+                        result.recursive_7day_block_wape
+                    ).toFixed(4) + "%"
+                }
+                <br>
+                Products:
+                ${result.products}
+            </div>
+        `;
+
+        await loadBusinessPipelineStatus();
+        await loadBusinessRecommendations();
+
+    }
+
+    catch (error) {
+
+        setBusinessStageStatus(
+            "businessSafetyStatus",
+            "Failed",
+            "danger"
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>
+                    Safety-stock calibration failed.
+                </strong>
+                <br>
+                <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+            </div>
+        `;
+    }
+
+    finally {
+
+        setBusinessButtonLoading(
+            button,
+            false,
+            "",
+            originalHtml
+        );
+    }
+}
+
+
+async function loadBusinessStoreOptions() {
+
+    const select =
+        document.getElementById(
+            "businessStoreFilter"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    const currentValue =
+        select.value;
+
+    let result;
+
+    try {
+
+        result = await apiFetch(
+            `${API_BASE}/api/business/recommendations?limit=5000`
+        );
+
+    }
+
+    catch {
+
+        select.innerHTML = `
+            <option value="">
+                All Stores
+            </option>
+        `;
+
+        return;
+    }
+
+    const stores = [
+        ...new Set(
+            (result.recommendations || []).map(
+                item => item.store_id
+            )
+        )
+    ]
+    .filter(Boolean)
+    .sort();
+
+    select.innerHTML = `
+        <option value="">
+            All Stores
+        </option>
+    `;
+
+    stores.forEach(
+        storeId => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                storeId;
+
+            option.textContent =
+                storeId;
+
+            select.appendChild(
+                option
+            );
+        }
+    );
+
+    if (
+        currentValue
+        &&
+        stores.includes(
+            currentValue
+        )
+    ) {
+        select.value =
+            currentValue;
+    }
+}
+
+
+async function loadBusinessRecommendations() {
+
+    const store =
+        document.getElementById(
+            "businessStoreFilter"
+        )?.value || "";
+
+    const status =
+        document.getElementById(
+            "businessStatusFilter"
+        )?.value || "";
+
+    const params =
+        new URLSearchParams();
+
+    params.set(
+        "limit",
+        "5000"
+    );
+
+    if (store) {
+        params.set(
+            "store_id",
+            store
+        );
+    }
+
+    if (status) {
+        params.set(
+            "status",
+            status
+        );
+    }
+
+    let result;
+
+    try {
+
+        result = await apiFetch(
+            `${API_BASE}/api/business/recommendations?${params.toString()}`
+        );
+
+    }
+
+    catch (error) {
+
+        const staleOrUnavailable =
+            error.message.includes(
+                "Saved business recommendations are stale"
+            )
+            ||
+            error.message.includes(
+                "freshness metadata"
+            );
+
+        const summaryIds = [
+            "businessRecommendationCount",
+            "businessForecastDemand",
+            "businessInventoryPosition",
+            "businessRecommendedOrder",
+            "businessCriticalCount",
+            "businessLowStockCount",
+            "businessHealthyCount"
+        ];
+
+        summaryIds.forEach(
+            id => {
+
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+                if (element) {
+                    element.textContent = "-";
+                }
+            }
+        );
+
+        const tbody =
+            document.getElementById(
+                "businessRecommendationTable"
+            );
+
+        if (tbody) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        ${
+                            staleOrUnavailable
+                            ? "Saved recommendations are stale. Generate fresh recommendations."
+                            : "Business recommendations are currently unavailable."
+                        }
+                    </td>
+                </tr>
+            `;
+        }
+
+        const message =
+            document.getElementById(
+                "businessOperationMessage"
+            );
+
+        if (message) {
+
+            message.innerHTML = staleOrUnavailable
+                ? `
+                    <div class="alert alert-warning">
+                        <strong>
+                            Recommendations are stale.
+                        </strong>
+                        <br>
+                        One or more source inputs changed.
+                        Click
+                        <strong>
+                            Generate Fresh Recommendations
+                        </strong>
+                        before using the displayed results.
+                    </div>
+                `
+                : `
+                    <div class="alert alert-danger">
+                        <strong>
+                            Recommendations could not be loaded.
+                        </strong>
+                        <br>
+                        <pre class="mb-0 mt-2 text-wrap">${error.message}</pre>
+                    </div>
+                `;
+        }
+
+        return;
+    }
+
+    const recommendations =
+        result.recommendations || [];
+
+    const totalForecastDemand =
+        recommendations.reduce(
+            (sum, item) =>
+                sum
+                + Number(
+                    item.forecast_demand_7d
+                ),
+            0
+        );
+
+    const totalInventoryPosition =
+        recommendations.reduce(
+            (sum, item) =>
+                sum
+                + Number(
+                    item.inventory_position
+                ),
+            0
+        );
+
+    document.getElementById(
+        "businessRecommendationCount"
+    ).textContent =
+        Number(
+            result.total_matching
+        ).toLocaleString();
+
+    document.getElementById(
+        "businessForecastDemand"
+    ).textContent =
+        totalForecastDemand.toLocaleString(
+            undefined,
+            {
+                maximumFractionDigits: 2
+            }
+        );
+
+    document.getElementById(
+        "businessInventoryPosition"
+    ).textContent =
+        totalInventoryPosition.toLocaleString(
+            undefined,
+            {
+                maximumFractionDigits: 2
+            }
+        );
+
+    document.getElementById(
+        "businessRecommendedOrder"
+    ).textContent =
+        Number(
+            result.total_recommended_order
+        ).toLocaleString();
+
+    document.getElementById(
+        "businessCriticalCount"
+    ).textContent =
+        Number(
+            result.status_counts?.CRITICAL || 0
+        ).toLocaleString();
+
+    document.getElementById(
+        "businessLowStockCount"
+    ).textContent =
+        Number(
+            result.status_counts?.LOW_STOCK || 0
+        ).toLocaleString();
+
+    document.getElementById(
+        "businessHealthyCount"
+    ).textContent =
+        Number(
+            result.status_counts?.HEALTHY || 0
+        ).toLocaleString();
+
+    const tbody =
+        document.getElementById(
+            "businessRecommendationTable"
+        );
+
+    tbody.innerHTML = "";
+
+    if (!recommendations.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    No real business recommendations found.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    recommendations.forEach(
+        item => {
+
+            let statusClass =
+                "healthy";
+
+            if (
+                item.status
+                === "CRITICAL"
+            ) {
+                statusClass =
+                    "critical";
+            }
+
+            else if (
+                item.status
+                === "LOW_STOCK"
+            ) {
+                statusClass =
+                    "low";
+            }
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+            row.innerHTML = `
+                <td>
+                    ${item.store_id}
+                </td>
+
+                <td>
+                    <strong>
+                        ${item.product_name}
+                    </strong>
+                    <div class="small-label">
+                        ${item.product_id}
+                    </div>
+                </td>
+
+                <td>
+                    ${item.category}
+                </td>
+
+                <td>
+                    ${Number(
+                        item.forecast_demand_7d
+                    ).toLocaleString(
+                        undefined,
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </td>
+
+                <td>
+                    ${Number(
+                        item.inventory_position
+                    ).toLocaleString(
+                        undefined,
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </td>
+
+                <td>
+                    ${Number(
+                        item.safety_stock
+                    ).toLocaleString(
+                        undefined,
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </td>
+
+                <td>
+                    ${Number(
+                        item.reorder_point
+                    ).toLocaleString(
+                        undefined,
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </td>
+
+                <td>
+                    <strong class="text-primary">
+                        ${Number(
+                            item.recommended_order
+                        ).toLocaleString()}
+                    </strong>
+                </td>
+
+                <td>
+                    <span class="status-badge ${statusClass}">
+                        ${item.status.replace("_", " ")}
+                    </span>
+                </td>
+            `;
+
+            tbody.appendChild(
+                row
+            );
+        }
+    );
+}
+
+
+async function generateBusinessRecommendations() {
+
+    const button =
+        document.getElementById(
+            "generateBusinessBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessOperationMessage"
+        );
+
+    const originalText =
+        button.innerHTML;
+
+    button.disabled =
+        true;
+
+    button.innerHTML = `
+        <span
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
+        ></span>
+        Generating...
+    `;
+
+    message.innerHTML = `
+        <div class="alert alert-info">
+            Generating fresh business forecasts and inventory recommendations...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiFetch(
+                `${API_BASE}/api/business/recommendations/generate`,
+                {
+                    method: "POST"
+                }
+            );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Fresh recommendations generated successfully.
+                </strong>
+                <br>
+                Forecast Window:
+                ${result.forecast_start}
+                to
+                ${result.forecast_end}
+                <br>
+                Recommended Order Units:
+                ${Number(
+                    result.total_recommended_order
+                ).toLocaleString()}
+            </div>
+        `;
+
+        await loadBusinessStoreOptions();
+        await loadBusinessRecommendations();
+        await loadBusinessPipelineStatus();
+
+    }
+    catch (error) {
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                ${error.message}
+            </div>
+        `;
+    }
+    finally {
+
+        button.disabled =
+            false;
+
+        button.innerHTML =
+            originalText;
+    }
+}
+
+
+async function exportBusinessRecommendations() {
+
+    const button =
+        document.getElementById(
+            "businessExportBtn"
+        );
+
+    const message =
+        document.getElementById(
+            "businessOperationMessage"
+        );
+
+    const storeId =
+        document.getElementById(
+            "businessStoreFilter"
+        ).value;
+
+    const status =
+        document.getElementById(
+            "businessStatusFilter"
+        ).value;
+
+    const params =
+        new URLSearchParams();
+
+    if (storeId) {
+
+        params.set(
+            "store_id",
+            storeId
+        );
+    }
+
+    if (status) {
+
+        params.set(
+            "status",
+            status
+        );
+    }
+
+    const query =
+        params.toString();
+
+    const exportUrl =
+        `${API_BASE}/api/business/recommendations/export`
+        + (
+            query
+            ? `?${query}`
+            : ""
+        );
+
+    const originalText =
+        button.innerHTML;
+
+    button.disabled =
+        true;
+
+    button.innerHTML = `
+        <span
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
+        ></span>
+        Exporting...
+    `;
+
+    try {
+
+        const response =
+            await fetch(
+                exportUrl
+            );
+
+        if (!response.ok) {
+
+            let detail;
+
+            try {
+
+                const errorBody =
+                    await response.json();
+
+                detail =
+                    typeof errorBody.detail === "string"
+                    ? errorBody.detail
+                    : JSON.stringify(
+                        errorBody.detail
+                    );
+
+            }
+
+            catch {
+
+                detail =
+                    `Export failed with status ${response.status}`;
+            }
+
+            throw new Error(
+                detail
+            );
+        }
+
+        const blob =
+            await response.blob();
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+        link.href =
+            url;
+
+        link.download =
+            "business_recommendations.csv";
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        link.remove();
+
+        URL.revokeObjectURL(
+            url
+        );
+
+        message.innerHTML = `
+            <div class="alert alert-success">
+                <strong>
+                    Business recommendations exported successfully.
+                </strong>
+                <br>
+                File: business_recommendations.csv
+            </div>
+        `;
+
+    }
+
+    catch (error) {
+
+        message.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>
+                    Recommendation export failed.
+                </strong>
+                <br>
+                ${error.message}
+            </div>
+        `;
+    }
+
+    finally {
+
+        button.disabled =
+            false;
+
+        button.innerHTML =
+            originalText;
+    }
+}
+
+
+function resetBusinessFilters() {
+
+    document.getElementById(
+        "businessStoreFilter"
+    ).value = "";
+
+    document.getElementById(
+        "businessStatusFilter"
+    ).value = "";
+
+    loadBusinessRecommendations();
+}
+
+
+async function loadDashboard() {
+
+    await loadBusinessStoreOptions();
+
+    await Promise.all([
+        loadStats(),
+        loadActiveModel(),
+        loadModelComparison(),
+        loadForecastChart(),
+        loadForecastTable(),
+        loadRecommendations(),
+        loadBusinessRecommendations(),
+        loadBusinessPipelineStatus()
+    ]);
+}
+
+
+async function initializeDashboard() {
+
+    try {
+
+        await loadMasterData();
+        await loadDashboard();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Initialization error:",
+            error
+        );
+
+        alert(
+            "Dashboard initialization failed: "
+            + error.message
+        );
+    }
+}
+
+
+initializeDashboard();
+
+</script>
+
+</body>
+</html>

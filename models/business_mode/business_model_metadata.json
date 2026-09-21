@@ -1,0 +1,74 @@
+{
+    "model_type": "LightGBM",
+    "mode": "real_business",
+    "source_sales_file": "data\\business_mode\\uploads\\active_sales_history.csv",
+    "source_sales_sha256": "1eef2f9817e27c781601d5cb443e4d382589ba5d23c6b6e1fa929e6e771ac891",
+    "feature_names": [
+        "store_id",
+        "product_id",
+        "product_name",
+        "category",
+        "promotion",
+        "lag_1",
+        "lag_7",
+        "lag_14",
+        "lag_28",
+        "rolling_mean_7",
+        "rolling_mean_14",
+        "rolling_mean_28",
+        "rolling_std_7",
+        "rolling_std_28",
+        "day_of_week",
+        "day_of_month",
+        "month",
+        "week_of_year",
+        "is_weekend"
+    ],
+    "categorical_features": [
+        "store_id",
+        "product_id",
+        "product_name",
+        "category"
+    ],
+    "category_levels": {
+        "store_id": [
+            "BRANCH_A",
+            "BRANCH_B"
+        ],
+        "product_id": [
+            "SKU101",
+            "SKU102",
+            "SKU103"
+        ],
+        "product_name": [
+            "Basmati Rice",
+            "Cooking Oil",
+            "Laundry Soap"
+        ],
+        "category": [
+            "Grocery",
+            "Household"
+        ]
+    },
+    "train_start": "2026-01-29",
+    "train_end": "2026-06-01",
+    "validation_start": "2026-06-02",
+    "validation_end": "2026-06-29",
+    "validation_mae": 1.7851312727730058,
+    "validation_rmse": 2.229407216398575,
+    "validation_wape": 9.460632612803312,
+    "evaluation_model_path": "models\\business_mode\\business_lightgbm_evaluation_model.joblib",
+    "evaluation_training_rows": 744,
+    "evaluation_validation_rows": 168,
+    "production_model_path": "models\\business_mode\\business_lightgbm_model.joblib",
+    "production_training_rows": 912,
+    "production_train_start": "2026-01-29",
+    "production_train_end": "2026-06-29",
+    "production_model_role": "future_forecasting_full_history",
+    "evaluation_model_role": "leakage_free_holdout_backtesting",
+    "history_days": 180,
+    "raw_rows_loaded": 1080,
+    "feature_ready_rows": 912,
+    "stores": 2,
+    "products": 3
+}

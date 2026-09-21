@@ -1,0 +1,7 @@
+store_id,product_id,product_name,current_stock,on_order,backorders
+STORE_1,P001,Milk,120,20,0
+STORE_1,P002,Bread,80,0,5
+STORE_1,P003,Soft Drink,200,40,0
+STORE_2,P001,Milk,90,10,0
+STORE_2,P002,Bread,60,0,8
+STORE_2,P003,Soft Drink,150,25,0

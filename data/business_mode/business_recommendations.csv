@@ -1,0 +1,7 @@
+store_id,product_id,product_name,category,forecast_start,forecast_end,forecast_demand_7d,current_stock,on_order,backorders,inventory_position,base_demand_gap,safety_stock,reorder_point,recommended_order,status
+BRANCH_A,SKU101,Basmati Rice,Grocery,2026-06-30,2026-07-06,187.39,180,10,0,190,0.0,27,214.39,25,LOW_STOCK
+BRANCH_A,SKU102,Cooking Oil,Grocery,2026-06-30,2026-07-06,135.13,75,0,4,71,64.13,8,143.13,73,CRITICAL
+BRANCH_A,SKU103,Laundry Soap,Household,2026-06-30,2026-07-06,104.46,125,5,0,130,0.0,17,121.46,0,HEALTHY
+BRANCH_B,SKU101,Basmati Rice,Grocery,2026-06-30,2026-07-06,168.05,120,0,6,114,54.05,27,195.05,82,CRITICAL
+BRANCH_B,SKU102,Cooking Oil,Grocery,2026-06-30,2026-07-06,126.89,145,15,0,160,0.0,8,134.89,0,HEALTHY
+BRANCH_B,SKU103,Laundry Soap,Household,2026-06-30,2026-07-06,93.19,60,0,3,57,36.19,17,110.19,54,CRITICAL

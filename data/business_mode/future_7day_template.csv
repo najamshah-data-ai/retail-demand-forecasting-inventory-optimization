@@ -1,0 +1,43 @@
+date,store_id,product_id,product_name,category,promotion
+2026-06-30,STORE_1,P001,Milk,Dairy,0
+2026-06-30,STORE_1,P002,Bread,Bakery,0
+2026-06-30,STORE_1,P003,Soft Drink,Beverages,0
+2026-06-30,STORE_2,P001,Milk,Dairy,0
+2026-06-30,STORE_2,P002,Bread,Bakery,0
+2026-06-30,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-01,STORE_1,P001,Milk,Dairy,0
+2026-07-01,STORE_1,P002,Bread,Bakery,0
+2026-07-01,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-01,STORE_2,P001,Milk,Dairy,0
+2026-07-01,STORE_2,P002,Bread,Bakery,0
+2026-07-01,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-02,STORE_1,P001,Milk,Dairy,0
+2026-07-02,STORE_1,P002,Bread,Bakery,0
+2026-07-02,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-02,STORE_2,P001,Milk,Dairy,0
+2026-07-02,STORE_2,P002,Bread,Bakery,0
+2026-07-02,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-03,STORE_1,P001,Milk,Dairy,0
+2026-07-03,STORE_1,P002,Bread,Bakery,0
+2026-07-03,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-03,STORE_2,P001,Milk,Dairy,0
+2026-07-03,STORE_2,P002,Bread,Bakery,0
+2026-07-03,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-04,STORE_1,P001,Milk,Dairy,0
+2026-07-04,STORE_1,P002,Bread,Bakery,0
+2026-07-04,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-04,STORE_2,P001,Milk,Dairy,0
+2026-07-04,STORE_2,P002,Bread,Bakery,0
+2026-07-04,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-05,STORE_1,P001,Milk,Dairy,0
+2026-07-05,STORE_1,P002,Bread,Bakery,0
+2026-07-05,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-05,STORE_2,P001,Milk,Dairy,0
+2026-07-05,STORE_2,P002,Bread,Bakery,0
+2026-07-05,STORE_2,P003,Soft Drink,Beverages,0
+2026-07-06,STORE_1,P001,Milk,Dairy,0
+2026-07-06,STORE_1,P002,Bread,Bakery,0
+2026-07-06,STORE_1,P003,Soft Drink,Beverages,0
+2026-07-06,STORE_2,P001,Milk,Dairy,0
+2026-07-06,STORE_2,P002,Bread,Bakery,0
+2026-07-06,STORE_2,P003,Soft Drink,Beverages,0

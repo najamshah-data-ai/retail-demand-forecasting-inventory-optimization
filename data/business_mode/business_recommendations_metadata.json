@@ -1,0 +1,11 @@
+{
+  "generated_at_utc": "2026-09-20T06:39:12.572914+00:00",
+  "input_fingerprints": {
+    "sales_sha256": "1eef2f9817e27c781601d5cb443e4d382589ba5d23c6b6e1fa929e6e771ac891",
+    "inventory_sha256": "2c6aed4c669809d16caac5126d11e65dd9de51c0fde9255eabf53040eb5660b6",
+    "promotion_sha256": "4428c7d268a8b773dd32571a75b231e188fbc3b40c3fcbbbe77808c59ac386b2",
+    "model_sha256": "9aad7777728e7b929e90104576fecf8a72778bd57a09c236b53a6ab64e3bd07d",
+    "safety_stock_sha256": "cc29559d4b598a8b6c63fb7f9c8a47dc312ad18a6ae8d2447a0029c4a7e3ee5f"
+  },
+  "recommendation_rows": 6
+}

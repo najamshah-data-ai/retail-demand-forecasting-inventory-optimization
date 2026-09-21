@@ -1,0 +1,4 @@
+store_nbr,family_name,current_stock,on_order,backorders
+1,GROCERY I,1000,200,50
+1,BEVERAGES,800,100,20
+2,PRODUCE,1500,300,100
